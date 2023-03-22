@@ -39,6 +39,13 @@ def add_user_to_g():
         g.user = None
 
 
+@app.before_request
+def add_csrf_form_to_g():
+    """Add a csrf form to Flask global."""
+
+    g.form = CSRF_Form()
+
+
 def do_login(user):
     """Log in user."""
 
