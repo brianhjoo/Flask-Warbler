@@ -359,9 +359,9 @@ def homepage():
     if g.user:
         messages = (Message
                     .query
+                    .filter(Message.user_id == g.user.id)
                     .order_by(Message.timestamp.desc())
-                    .limit(100)
-                    .all())
+                    .limit(100))
 
         return render_template('home.html', messages=messages)
 
