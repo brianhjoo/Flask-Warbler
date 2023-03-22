@@ -4,13 +4,14 @@ from dotenv import load_dotenv
 from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
+from werkzeug.exceptions import Unauthorized
 
-from forms import UserAddForm, LoginForm, MessageForm
+from forms import UserAddForm, LoginForm, MessageForm, CSRF_Form
 from models import db, connect_db, User, Message
 
 load_dotenv()
 
-CURR_USER_KEY = "curr_user"
+CURR_USER_KEY = "username"
 
 app = Flask(__name__)
 
@@ -65,6 +66,7 @@ def signup():
 
     if CURR_USER_KEY in session:
         del session[CURR_USER_KEY]
+
     form = UserAddForm()
 
     if form.validate_on_submit():
@@ -114,7 +116,17 @@ def login():
 def logout():
     """Handle logout of user and redirect to homepage."""
 
-    form = g.csrf_form
+    form = CSRF_Form()
+
+    if form.validate_on_submit():
+        do_logout()
+
+        flash('You have successfully logged out!')
+
+        return redirect('/login')
+    else:
+        raise Unauthorized()
+
 
     # IMPLEMENT THIS AND FIX BUG
     # DO NOT CHANGE METHOD ON ROUTE

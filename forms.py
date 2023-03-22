@@ -44,3 +44,7 @@ class LoginForm(FlaskForm):
         'Password',
         validators=[Length(min=6)],
     )
+
+
+class CSRF_Form(FlaskForm):
+    """For CSRF protection"""
