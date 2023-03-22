@@ -56,6 +56,7 @@
           </a>
         </li>
         <li><a href="/messages/new">New Message</a></li>
+        <!--TODO: link tag not working with csrf -->
         <form action="/logout" method="POST">
           {{ g.form.hidden_tag() }}
           <li>

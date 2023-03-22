@@ -200,8 +200,9 @@ nav + .container {
   height: 360px;
   margin-top: -16px;
   opacity: 0.7;
-  background-size: cover;
+  background-size: center;
   background-position: top center;
+  overflow: hidden;
 }
 
 .full-width {
