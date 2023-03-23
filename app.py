@@ -172,7 +172,13 @@ def show_user(user_id):
 
     user = User.query.get_or_404(user_id)
 
-    return render_template('users/show.html', user=user)
+    messages = (Message
+                .query
+                .filter(Message.user_id == user_id)
+                .order_by(Message.timestamp.desc())
+                .all())
+
+    return render_template('users/show.html', user=user, messages=messages)
 
 
 @app.get('/users/<int:user_id>/following')
@@ -236,36 +242,34 @@ def stop_following(follow_id):
 
 
 @app.route('/users/profile', methods=["GET", "POST"])
-def profile():
+def update_profile():
     """Update profile for current user."""
 
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    user = User.query.get(g.user.id)
-
-    form = EditForm(obj=user)
+    form = EditForm(obj=g.user)
 
     if form.validate_on_submit():
         password = form.password.data
 
-        if not User.authenticate(user.username, password):
+        if not User.authenticate(g.user.username, password):
             flash('Invalid username/password!', 'danger')
 
             return redirect(f'/users/profile')
 
-        user.username = form.username.data
-        user.email = form.email.data
-        user.image_url = form.image_url.data or DEFAULT_IMAGE_URL
-        user.header_image_url = (
+        g.user.username = form.username.data
+        g.user.email = form.email.data
+        g.user.image_url = form.image_url.data or DEFAULT_IMAGE_URL
+        g.user.header_image_url = (
             form.header_image_url.data or DEFAULT_HEADER_IMAGE_URL
         )
-        user.bio = form.bio.data
+        g.user.bio = form.bio.data
 
         db.session.commit()
 
-        return redirect(f'/users/{user.id}')
+        return redirect(f'/users/{g.user.id}')
     else:
         return render_template('users/edit.html', form=form)
 
@@ -276,24 +280,29 @@ def delete_user():
 
     Redirect to signup page.
     """
+    form = CSRF_Form()
 
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/")
+    if form.validate_on_submit():
 
-    messages = Message.query.filter(
-        Message.user_id == g.user.id
-    ).all()
+        if not g.user:
+            flash("Access unauthorized.", "danger")
+            return redirect("/")
 
-    for message in messages:
-        db.session.delete(message)
+        messages = Message.query.filter(
+            Message.user_id == g.user.id
+        ).all()
 
-    do_logout()
+        for message in messages:
+            db.session.delete(message)
 
-    db.session.delete(g.user)
-    db.session.commit()
+        do_logout()
 
-    return redirect("/signup")
+        db.session.delete(g.user)
+        db.session.commit()
+
+        return redirect("/signup")
+    else:
+        raise Unauthorized()
 
 
 ##############################################################################
@@ -373,7 +382,9 @@ def homepage():
                     .query
                     .filter(Message.user_id.in_(user_ids))
                     .order_by(Message.timestamp.desc())
-                    .limit(100))
+                    .limit(100)
+                    .all())
+
 
         return render_template('home.html', messages=messages)
 
