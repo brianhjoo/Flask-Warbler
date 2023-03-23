@@ -56,7 +56,7 @@ class EditForm(FlaskForm):
 
     email = StringField(
         'E-mail',
-        validators=[Optional(), Email()],
+        validators=[Optional(), Email()]
     )
 
     image_url = StringField(
@@ -76,7 +76,7 @@ class EditForm(FlaskForm):
 
     password = PasswordField(
         'Password',
-        validators=[Length(min=6)],
+        validators=[Length(min=6)]
     )
 
 

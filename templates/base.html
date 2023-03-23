@@ -56,13 +56,12 @@
           </a>
         </li>
         <li><a href="/messages/new">New Message</a></li>
-        <!--TODO: link tag not working with csrf -->
-        <form action="/logout" method="POST">
-          {{ g.form.hidden_tag() }}
-          <li>
-            <button class="btn btn-link">Log out</button>
-          </li>
-        </form>
+        <li>
+          <form action="/logout" method="POST">
+            {{ g.form.hidden_tag() }}
+              <button class="btn btn-link">Log out</button>
+          </form>
+        </li>
       {% endif %}
 
     </ul>

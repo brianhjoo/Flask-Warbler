@@ -13,6 +13,9 @@ load_dotenv()
 
 CURR_USER_KEY = "username"
 
+DEFAULT_IMAGE_URL = "/static/images/default-pic.png"
+DEFAULT_HEADER_IMAGE_URL = "/static/images/warbler-hero.jpg"
+
 app = Flask(__name__)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
@@ -135,10 +138,6 @@ def logout():
         raise Unauthorized()
 
 
-    # IMPLEMENT THIS AND FIX BUG
-    # DO NOT CHANGE METHOD ON ROUTE
-
-
 ##############################################################################
 # General user routes:
 
@@ -253,12 +252,15 @@ def profile():
 
         if not User.authenticate(user.username, password):
             flash('Invalid username/password!', 'danger')
+
             return redirect(f'/users/profile')
 
         user.username = form.username.data
         user.email = form.email.data
-        user.image_url = form.image_url.data
-        user.header_image_url = form.header_image_url.data
+        user.image_url = form.image_url.data or DEFAULT_IMAGE_URL
+        user.header_image_url = (
+            form.header_image_url.data or DEFAULT_HEADER_IMAGE_URL
+        )
         user.bio = form.bio.data
 
         db.session.commit()
@@ -278,6 +280,13 @@ def delete_user():
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
+
+    messages = Message.query.filter(
+        Message.user_id == g.user.id
+    ).all()
+
+    for message in messages:
+        db.session.delete(message)
 
     do_logout()
 
@@ -357,9 +366,12 @@ def homepage():
     """
 
     if g.user:
+        user_ids = [f.id for f in g.user.following]
+        user_ids.append(g.user.id)
+
         messages = (Message
                     .query
-                    .filter(Message.user_id == g.user.id)
+                    .filter(Message.user_id.in_(user_ids))
                     .order_by(Message.timestamp.desc())
                     .limit(100))
 
