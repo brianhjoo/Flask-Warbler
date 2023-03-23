@@ -30,6 +30,24 @@ class Follows(db.Model):
     )
 
 
+class Like(db.Model):
+    """Connection of a message <-> liked-message"""
+
+    __tablename__ = 'likes'
+
+    liked_message_id = db.Column(
+        db.Integer,
+        db.ForeignKey('messages.id'),
+        primary_key=True
+    )
+
+    user_that_liked_id = db.Column(
+        db.Integer,
+        db.ForeignKey('users.id'),
+        primary_key=True
+    )
+
+
 class User(db.Model):
     """User in the system."""
 
@@ -76,6 +94,12 @@ class User(db.Model):
     )
 
     messages = db.relationship('Message', backref="user")
+
+    liked_messages = db.relationship(
+        'Message',
+        secondary='likes',
+        backref='user_that_liked'
+    )
 
     followers = db.relationship(
         "User",
@@ -141,6 +165,32 @@ class User(db.Model):
         found_user_list = [
             user for user in self.following if user == other_user]
         return len(found_user_list) == 1
+
+    def is_liked(self, message_id):
+        """Checks to see if a message is liked or not"""
+
+        return Like.query.get(message_id, self.id)
+
+    def like_message(self, message_id):
+        """Like a message"""
+
+        like = self.is_liked(message_id)
+
+        if not like:
+            new_like = Like(
+                liked_message_id=message_id,
+                user_that_liked_id=self.id
+            )
+
+            db.session.add(new_like)
+
+    def unlike_message(self, message_id):
+        """Unlike a message"""
+
+        like = self.is_liked(message_id)
+
+        if like:
+            db.session.delete(like)
 
 
 class Message(db.Model):

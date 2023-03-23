@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from werkzeug.exceptions import Unauthorized
 
 from forms import UserAddForm, LoginForm, MessageForm, EditForm, CSRF_Form
-from models import db, connect_db, User, Message
+from models import db, connect_db, User, Message, Like
 
 load_dotenv()
 
@@ -341,6 +341,29 @@ def show_message(message_id):
 
     msg = Message.query.get_or_404(message_id)
     return render_template('messages/show.html', message=msg)
+
+
+@app.post('/messages/<int:message_id>/<event>')
+def like_message(message_id, event):
+    """Like a message"""
+
+    form = CSRF_Form()
+
+    if form.validate_on_submit:
+        msg_liked = g.user.is_liked(message_id)
+
+        if event == 'like' and not msg_liked:
+            g.user.like_message(message_id)
+
+            db.session.commit()
+
+            return redirect('/')
+        elif event == 'unlike' and msg_liked:
+            g.user.unlike_message(message_id)
+
+        return redirect('/')
+    else:
+        raise Unauthorized()
 
 
 @app.post('/messages/<int:message_id>/delete')
