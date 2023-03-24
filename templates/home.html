@@ -58,6 +58,7 @@
               <p>{{ msg.text }}</p>
             </div>
             <form class='star-form' method="POST">
+              <input type="hidden" name="fromlocation" value="{{ request.path }}">
               {{ form.hidden_tag() }}
               {% if (g.user.is_liked(msg.id))
                 and (msg.user_id != g.user.id) %}

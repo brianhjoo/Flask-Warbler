@@ -361,7 +361,7 @@ def like_message(message_id, event):
     """Like a message"""
 
     form = CSRF_Form()
-    path = session['likes_path']
+    path = request.form.get('fromlocation')
 
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -375,22 +375,18 @@ def like_message(message_id, event):
 
             db.session.commit()
 
-            return redirect('/')
+            return redirect(path)
         else:
             g.user.unlike_message(message_id)
 
             db.session.commit()
 
-            return (
-                redirect('/')
-                if path != '/messages/likes'
-                else redirect('/messages/likes')
-            )
+            return redirect(path)
     else:
         raise Unauthorized()
 
 
-@app.get('/messages/likes')
+@app.get('/messages/likes')  #TODO: work on endpoint name: users/userid/likes
 def display_liked_messages():
     """Show all messages that logged-in user has liked."""
 
