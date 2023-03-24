@@ -361,6 +361,7 @@ def like_message(message_id, event):
     """Like a message"""
 
     form = CSRF_Form()
+    path = session['likes_path']
 
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -380,7 +381,11 @@ def like_message(message_id, event):
 
             db.session.commit()
 
-            return redirect('/')
+            return (
+                redirect('/')
+                if path != '/messages/likes'
+                else redirect('/messages/likes')
+            )
     else:
         raise Unauthorized()
 
@@ -390,6 +395,7 @@ def display_liked_messages():
     """Show all messages that logged-in user has liked."""
 
     form = CSRF_Form()
+    session['likes_path'] = request.path
 
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -397,7 +403,14 @@ def display_liked_messages():
 
     user = g.user
 
-    liked_messages = g.user.liked_messages
+    msg_user_ids = [m.id for m in g.user.liked_messages]
+
+    liked_messages= (Message
+                     .query
+                     .filter(Message.id.in_(msg_user_ids))
+                     .order_by(Message.timestamp.desc())
+                     .all())
+
     liked_message_count = len(liked_messages)
 
     return render_template(
