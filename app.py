@@ -355,7 +355,7 @@ def show_message(message_id):
     msg = Message.query.get_or_404(message_id)
     return render_template('messages/show.html', message=msg, form=form)
 
-
+#TODO: split into two routes like/unlike, or just one route to endpoint 'like'. Grab fromlocation value with request.form
 @app.post('/messages/<int:message_id>/<event>')
 def like_message(message_id, event):
     """Like a message"""
@@ -367,7 +367,7 @@ def like_message(message_id, event):
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    if form.validate_on_submit:
+    if form.validate_on_submit():
         msg_liked = g.user.is_liked(message_id)
 
         if event == 'like' and not msg_liked:
