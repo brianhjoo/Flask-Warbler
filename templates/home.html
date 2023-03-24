@@ -57,6 +57,20 @@
               <span class="text-muted">{{ msg.timestamp.strftime('%d %B %Y') }}</span>
               <p>{{ msg.text }}</p>
             </div>
+            <form class='star-form' method="POST">
+              {{ form.hidden_tag() }}
+              {% if (g.user.is_liked(msg.id))
+                and (msg.user_id != g.user.id) %}
+                <button class='star-btn' formaction="/messages/{{ msg.id }}/unlike">
+                  <i class="bi star bi-star-fill"></i>
+                </button>
+              {% elif (not g.user.is_liked(msg.id))
+                and (msg.user_id != g.user.id) %}
+                <button class='star-btn' formaction="/messages/{{ msg.id }}/like">
+                  <i class="bi star bi-star"></i>
+                </button>
+              {% endif %}
+            </form>
           </li>
         {% endfor %}
       </ul>

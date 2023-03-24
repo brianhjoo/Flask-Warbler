@@ -193,6 +193,7 @@ nav + .container {
 }
 
 .message-area {
+  width: 100%;
   margin-left: 10px;
 }
 
@@ -272,6 +273,21 @@ nav + .container {
 #messages .list-group-item a:not(.message-link) {
   position: relative;
   z-index: 2;
+}
+
+.star-form {
+  z-index: 3;
+}
+
+.star-btn {
+  right: 20px;
+  width: 30px;
+  border: none;
+  background-color: transparent;
+}
+
+.bi-star-fill {
+  color: #d8b621;
 }
 
 #messages .list-group-item {

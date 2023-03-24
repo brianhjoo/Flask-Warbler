@@ -30,6 +30,18 @@
             <form method="POST"
                   action="/users/stop-following/{{ message.user.id }}">
               <button class="btn btn-primary">Unfollow</button>
+              <form class='star-form' method="POST">
+                {{ form.hidden_tag() }}
+                {% if g.user.is_liked(message.id) %}
+                <button class='star-btn' formaction="/messages/{{ message.id }}/unlike">
+                  <i class="bi star bi-star-fill"></i>
+                </button>
+                {% else %}
+                  <button class='star-btn' formaction="/messages/{{ message.id }}/like">
+                    <i class="bi star bi-star"></i>
+                  </button>
+                {% endif %}
+              </form>
             </form>
             {% else %}
             <form method="POST"

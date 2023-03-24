@@ -169,7 +169,7 @@ class User(db.Model):
     def is_liked(self, message_id):
         """Checks to see if a message is liked or not"""
 
-        return Like.query.get(message_id, self.id)
+        return Like.query.get((message_id, self.id))
 
     def like_message(self, message_id):
         """Like a message"""

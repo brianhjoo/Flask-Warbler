@@ -20,8 +20,9 @@ app = Flask(__name__)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
 app.config['SQLALCHEMY_ECHO'] = False
-app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = True
+app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
+
 toolbar = DebugToolbarExtension(app)
 
 connect_db(app)
@@ -166,6 +167,8 @@ def list_users():
 def show_user(user_id):
     """Show user profile."""
 
+    form = CSRF_Form()
+
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
@@ -178,7 +181,15 @@ def show_user(user_id):
                 .order_by(Message.timestamp.desc())
                 .all())
 
-    return render_template('users/show.html', user=user, messages=messages)
+    liked_message_count = len(user.liked_messages)
+
+    return render_template(
+        'users/show.html',
+        user=user,
+        messages=messages,
+        form=form,
+        liked_message_count=liked_message_count
+    )
 
 
 @app.get('/users/<int:user_id>/following')
@@ -335,12 +346,14 @@ def add_message():
 def show_message(message_id):
     """Show a message."""
 
+    form = CSRF_Form()
+
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
     msg = Message.query.get_or_404(message_id)
-    return render_template('messages/show.html', message=msg)
+    return render_template('messages/show.html', message=msg, form=form)
 
 
 @app.post('/messages/<int:message_id>/<event>')
@@ -348,6 +361,10 @@ def like_message(message_id, event):
     """Like a message"""
 
     form = CSRF_Form()
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
 
     if form.validate_on_submit:
         msg_liked = g.user.is_liked(message_id)
@@ -358,12 +375,38 @@ def like_message(message_id, event):
             db.session.commit()
 
             return redirect('/')
-        elif event == 'unlike' and msg_liked:
+        else:
             g.user.unlike_message(message_id)
 
-        return redirect('/')
+            db.session.commit()
+
+            return redirect('/')
     else:
         raise Unauthorized()
+
+
+@app.get('/messages/likes')
+def display_liked_messages():
+    """Show all messages that logged-in user has liked."""
+
+    form = CSRF_Form()
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    user = g.user
+
+    liked_messages = g.user.liked_messages
+    liked_message_count = len(liked_messages)
+
+    return render_template(
+        'messages/liked-msgs.html',
+        user=user,
+        form=form,
+        liked_messages=liked_messages,
+        liked_message_count=liked_message_count
+    )
 
 
 @app.post('/messages/<int:message_id>/delete')
@@ -397,6 +440,8 @@ def homepage():
     - logged in: 100 most recent messages of followed_users
     """
 
+    form = CSRF_Form()
+
     if g.user:
         user_ids = [f.id for f in g.user.following]
         user_ids.append(g.user.id)
@@ -408,8 +453,7 @@ def homepage():
                     .limit(100)
                     .all())
 
-
-        return render_template('home.html', messages=messages)
+        return render_template('home.html', messages=messages, form=form)
 
     else:
         return render_template('home-anon.html')

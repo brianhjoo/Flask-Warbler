@@ -1,28 +1,29 @@
-{% extends 'users/detail.html' %}
+{% extends './users/detail.html' %}
+
 {% block user_details %}
+
 <div class="col-sm-6">
   <ul class="list-group" id="messages">
 
-    {% for message in messages %}
+    {% for message in liked_messages %}
 
     <li class="list-group-item">
       <a href="/messages/{{ message.id }}" class="message-link"></a>
 
-      <a href="/users/{{ user.id }}">
-        <img src="{{ user.image_url }}"
+      <a href="/users/{{ message.user_that_liked.id }}">
+        <img src="{{ message.user.image_url }}"
              alt="user image"
              class="timeline-image">
       </a>
 
       <div class="message-area">
-        <a href="/users/{{ user.id }}">@{{ user.username }}</a>
+        <a href="/users/{{ message.user.id }}">@{{ message.user.username }}</a>
         <span class="text-muted">
               {{ message.timestamp.strftime('%d %B %Y') }}
             </span>
         <p>{{ message.text }}</p>
       </div>
       <form class='star-form' method="POST">
-        {{ form.hidden_tag() }}
         {% if (g.user.is_liked(message.id))
           and (message.user_id != g.user.id) %}
           <button class='star-btn' formaction="/messages/{{ message.id }}/unlike">
@@ -41,4 +42,5 @@
 
   </ul>
 </div>
+
 {% endblock %}
